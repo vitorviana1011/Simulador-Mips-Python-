@@ -51,7 +51,7 @@ class Registradores:
         return self.value
 
     def __repr__(self):
-        return f"{self.name} ({self.reg_type}): {self.value}"
+        return f"{self.nome} ({self.tipo}): {self.valor}"
     
 class Memoria:
     def __init__(self):
@@ -65,11 +65,11 @@ class Memoria:
 
     def __repr__(self):
         # String com todos os endereços e valores da memória
-        return "\n".join([f"Address {addr}: {val}" for addr, val in self.memory.items()])
+        return "\n".join([f"Address {addr}: {val}" for addr, val in self.memoria.items()])
 
 class MIPSSimulator:
     def __init__(self):
-        self.registers = {f"$R{i}": Registradores(f"$R{i}", tipo_registradores.get(f"$r{i}")) for i in range(32)}
+        self.registradores = {f"$R{i}": Registradores(f"$R{i}", tipo_registradores.get(f"$r{i}")) for i in range(32)}
         self.memoria = Memoria()
         self.pc = 0 # Contador de Processos
         self.instrucoes = []    #Lista de instrucoes
@@ -78,9 +78,40 @@ class MIPSSimulator:
         self.instrucoes = programa
     
     def executar_instrucoes(self, instrucoes):
-        #depois eu faco, to com preguica agora
-        print("a")
+        # Organiza e verifca as instrucoes
+        instrucoes = instrucoes.strip()
+        if not instrucoes:
+            return
+        
+        parts = instrucoes.split()  # Separa as instrucoes
+        opcode = parts[0].upper()
+
+        # Processar instrucoes
+        if opcode == "ADD":
+            rd, rs, rt = parts[1], parts[2], parts[3]
+            self.registradores[rd].value = self.registradores[rs].value + self.registradores[rt].value
+        elif opcode == "SUB":
+            rd, rs, rt = parts[1], parts[2], parts[3]
+            self.registradores[rd].value = self.registradores[rs].value - self.registradores[rt].value
+        elif opcode == "MULT":
+            rd, rs = parts[1], parts[2]
+            self.registradores[rd].value = self.registradores[rs].value * self.registradores[rs].value
+        elif opcode == "LW":
+            rt, offset_base = parts[1], parts[2]
+            offset, base = offset_base.split('(')
+            base = base[:-1]
+            endereco = self.registradores[base].valor + int(offset) # Calcula o endereço de memória: registrador base + deslocamento
+            self.registradores[rt].valor = self.memoria.load(endereco)  # Carrega o valor da memória no endereço calculado
+        elif opcode == 'SW':
+            rt, offset_base = parts[1], parts[2]
+            offset, base = offset_base.split('(')
+            base = base[:-1]
+            endereco = self.registradores[base].valor + int(offset)
+        else:  
+            raise ValueError(f"Instrução desconhecida: {opcode}")
+        
     
+
     def run(self, passo_a_passo = False):
         for i, instrucao in enumerate(self.instrucoes):
             self.pc = i
@@ -89,18 +120,83 @@ class MIPSSimulator:
                 input(f"Executou: {instrucao}. Pressione Enter para continuar")
 
 class InterfaceGrafica:
-    #Usar a biblioteca tkinter
 
-    #vai precisar de algumns metodos pra ler o arquivo
+    def __init__(self, root):
+        self.root = root
+        self.simulador = MIPSSimulator()
+        self.programa = []
+        self.create_widgets()
 
-    def __init__(self):
-        pass
+    def create_widgets(self):
+        self.text_area = tk.Text(self.root, height = 10, width = 50)
+        self.text_area.pack()
+
+        self.load_button = tk.Button(self.root, text = "Carregar Programa", command=self.carregar_arquivo)
+        self.load_button.pack()
+
+        self.run_button = tk.Button(self.root, text= "Run", command=self.run_program)
+        self.run_button.pack()
+
+        self.step_button = tk.Button(self.root, text= "Passo a passo", command=self.run_passo_a_passo)
+        self.step_button.pack()
+
+        self.registradores_painel = tk.Label(self.root, text="Registradores:")
+        self.registradores_painel.pack
+
+        self.registradores_saida = tk.Text(self.root, height=10, width=50, state="disabled")
+        self.registradores_saida.pack()
+
+        self.memoria_label = tk.Label(self.root, text="Memória:")
+        self.memoria_label.pack()
+
+        self.memoria_output = tk.Text(self.root, height=10, width=50, state="disabled")
+        self.memoria_output.pack()
+
+    def carregar_arquivo(self):
+        rota_arquivo = filedialog.askopenfilename(filetypes=[("All Files", "*.*")])
+        if rota_arquivo:
+            with open(rota_arquivo, 'r') as file:
+                programa = file.read()
+            self.text_area.delete(1.0, tk.END)
+            self.text_area.insert(tk.END, programa)
+            messagebox.showinfo("Sucesso!", "Programa Carregado com Sucesso!")
+
+    def update_saida(self):
+        # Destrava
+        self.registradores_saida.config(state="normal")
+        self.memoria_output.config(state="normal")
+
+        # Apaga
+        self.registradores_saida.delete(1.0, tk.END)
+        self.memoria_output.delete(1.0, tk.END)
+
+        # Carrega do simulador
+        regs = "\n".join([str(reg) for reg in self.simulator.registradores.valor()])
+        mems = str(self.simulator.memoria)
+
+        # Carrega pra printar
+        self.registradores_saida.insert(tk.END, regs)
+        self.memoria_output.insert(tk.END, mems)
+
+        # Trava
+        self.registradores_saida.config(state="disabled")
+        self.memoria_output.config(state="disabled")
+
+    def run_program(self):
+        programa = self.text_area.get(1.0, tk.END).strip().split("\n")
+        self.simulador.load_programa(programa)
+        self.simulador.run()
+        self.update_saida()
+
+    def run_passo_a_passo(self):
+        programa = self.text_area.get(1.0, tk.END).strip().split("\n")
+        self.simulador.load_programa(programa)
+        self.simulador.run(passo_a_passo= True)
+        self.update_saida()
 
 
-def main():
-    # Inicializando o simulador MIPS
-    simulator = MIPSSimulator()
-    
-# Chama a função main para testar
 if __name__ == "__main__":
-    main()        
+    root = tk.Tk()
+    root.title("Simulador MIPS")
+    app = InterfaceGrafica(root)
+    root.mainloop()     
