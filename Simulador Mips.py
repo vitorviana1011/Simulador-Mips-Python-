@@ -57,12 +57,6 @@ class MIPSSimulator:
             return int(value, 16)  # Hexadecimal
         return int(value)
 
-    def inverter_bytes(self, numero):
-        # Converte o número para hexadecimal e depois inverte a string dos dígitos
-        hex_val = hex(numero)[2:]  # Converte para hex e remove o '0x'
-        hex_val = hex_val.zfill(8)  # Garante que tenha 8 caracteres
-        return int(hex_val[::-1], 16)  # Inverte a string e converte de volta para inteiro
-
     def executar_instrucoes(self, instrucao):
         instrucao = instrucao.strip()
         if not instrucao or instrucao.startswith("#"):
@@ -95,8 +89,7 @@ class MIPSSimulator:
             self.registradores[rt].valor = self.registradores[rs].valor + imm
         elif opcode == "LUI":
             rt, imm = parts[1].strip(','), self.parse_number(parts[2])
-            # Chama o método inverter_bytes ao calcular o valor do registrador
-            self.registradores[rt].valor = self.inverter_bytes(imm << 16)  # Desloca e inverte
+            self.registradores[rt].valor = imm << 16
         elif opcode == "SLT":
             rd, rs, rt = parts[1].strip(','), parts[2].strip(','), parts[3].strip(',')
             self.registradores[rd].valor = 1 if self.registradores[rs].valor < self.registradores[rt].valor else 0
