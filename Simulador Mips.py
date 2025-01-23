@@ -107,8 +107,7 @@ class MIPSSimulator:
             offset, base = offset_base.split('(')
             base = base.strip(')')
             endereco = self.registradores[base].valor + int(offset)
-            # Chama inverter_bytes ao carregar o valor da memória
-            self.registradores[rt].valor = self.inverter_bytes(self.memoria.load(endereco))
+            self.registradores[rt].valor = self.memoria.load(endereco)
         elif opcode == "IMPRIMIR":
             tipo_impressao = parts[1].strip(',')
             
