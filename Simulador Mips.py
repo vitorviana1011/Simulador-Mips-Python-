@@ -141,6 +141,8 @@ class MIPSSimulator:
                 input(f"Executou: {instrucao}. Pressione Enter para continuar.")
 
 
+
+
 class InterfaceGrafica:
 
     def __init__(self, root):
@@ -173,6 +175,9 @@ class InterfaceGrafica:
 
         self.memoria_output = tk.Text(self.root, height=10, width=50, state="disabled")
         self.memoria_output.pack()
+
+        self.reset_button = tk.Button(self.root, text="Reset", command=self.reset)
+        self.reset_button.pack()
 
     def carregar_arquivo(self):
         rota_arquivo = filedialog.askopenfilename(filetypes=[("All Files", "*.*")])
@@ -218,6 +223,12 @@ class InterfaceGrafica:
         self.simulador.load_programa(programa)
         self.simulador.run(passo_a_passo=True)
         self.update_saida()
+
+    def reset(self):
+        self.simulador = MIPSSimulator() 
+        self.text_area.delete(1.0, tk.END)
+        self.update_saida()
+        messagebox.showinfo("Reset", "Simulador reiniciado")
 
 
 if __name__ == "__main__":
