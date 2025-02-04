@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+         <meta charset="UTF-8">
+         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+         <title>Projeto - Simulador MIPS</title>
+         <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body style="background-color: #F0F8FF; color: #1A202C;">
+         <header class="bg-blue-600 text-white p-4 text-center">
+             <h1 class="text-3xl font-bold"> Simulador <abbr title="Milhões de instruções por segundo">MIPS</abbr></h1>
+             <p class="text-sm">Projeto de Arquitetura e Organização de Computadores</p>
+         </header>
+        
+         <main class="p-4">
+             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+             <!-- Adicionar a instrução que gostaria que o programa coloque de Assembly -> binário ou binário-> assembly -->
+             <section class="bg-white rounded-lg shadow p-4">
+                 <h2 class="text-xl font-bold mb-2">Insira o programa (Assembly ou Binário):</h2>
+                 <form >
+                     <label for="codeInput">Insira o programa (Assembly ou Binário):</label><br>
+                     <textarea id="codeInput" rows="6" style="width: 100%; margin-top: 10px;" 
+                     placeholder="Exemplo (Assembly):add $t1, $t2, $t3 // sub $t0, $t1, $t4 //Exemplo: (Binário): 00000001001010110100100000100000 //10001110101000000000000000000100"></textarea>
+                     <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Próximo</button>
+                 </form>
+             </section>
+
+             <!-- Parte da execução, para a pessoa selecionar se prefere que seja automático ou passo a passo-->
+             <section class="bg-white rounded-lg shadow p-4">
+                 <h2 class="text-xl font-bold mb-2">Execução</h2>
+                 <div class="space-y-4">
+                 <div>
+                 <label for="execution-mode" class="block font-medium">Modo de Execução</label>
+                 <select id="execution-mode" class="mt-2 p-2 w-full border rounded">
+                     <option value="step-by-step">Passo a Passo</option>
+                     <option value="automatic">Automático</option>
+                 </select>
+                 </div>
+                 <button id="start-execution" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Iniciar Execução</button>
+                 </div>
+             </section>
+
+             <!-- Nessa parte teoricamente era pro código interligar ao python e ele sairia da escolha da pessoa, ou passo a passo ou automático a resposta -->
+             <section class="bg-white rounded-lg shadow p-4">
+                 <h2 class="text-xl font-bold mb-2">Saída</h2>
+                 <div id="output" class="h-64 overflow-y-auto bg-gray-200 p-2 rounded">
+                 <!-- Parte do código em python que entraria aqui -->
+                 </div>
+             </section>
+             </div>
+
+             <!-- Etapa para registrar a seleção -->
+             <section class="mt-4 bg-white rounded-lg shadow p-4">
+                 <h2 class="text-xl font-bold mb-2">Registradores</h2>
+                 <div id="registers" class="grid grid-cols-4 gap-4">
+                 <!-- Parte do código em python que entraria aqui -->
+                 </div>
+             </section>
+         </main>
+
+         <!-- Footer -->
+         <footer class="bg-gray-800 text-white text-center py-4 mt-4">
+             <p> by Gabrielle Kyoko e Vitor Viana <br> 2025 - Simulador MIPS </p>
+         </footer>
+
+         <script>
+              // Example of interactivity (To be connected with Flask or another backend)
+              document.getElementById('upload-form').addEventListener('submit', (e) => {
+               e.preventDefault();
+              alert('Arquivo carregado com sucesso!');
+              // Backend integration via fetch or XMLHttpRequest can go here
+             });
+
+             document.getElementById('start-execution').addEventListener('click', () => {
+             const mode = document.getElementById('execution-mode').value;
+             alert(`Executando em modo: ${mode}`);
+             // Start execution logic (backend connection)
+             });
+         </script>
+     </body>
+</html>
