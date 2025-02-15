@@ -1,81 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-         <meta charset="UTF-8">
-         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-         <title>Projeto - Simulador MIPS</title>
-         <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body style="background-color: #F0F8FF; color: #1A202C;">
-         <header class="bg-blue-600 text-white p-4 text-center">
-             <h1 class="text-3xl font-bold"> Simulador <abbr title="Milhões de instruções por segundo">MIPS</abbr></h1>
-             <p class="text-sm">Projeto de Arquitetura e Organização de Computadores</p>
-         </header>
-        
-         <main class="p-4">
-             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-             <!-- Adicionar a instrução que gostaria que o programa coloque de Assembly -> binário ou binário-> assembly -->
-             <section class="bg-white rounded-lg shadow p-4">
-                 <h2 class="text-xl font-bold mb-2">Insira o programa (Assembly ou Binário):</h2>
-                 <form >
-                     <label for="codeInput">Insira o programa (Assembly ou Binário):</label><br>
-                     <textarea id="codeInput" rows="6" style="width: 100%; margin-top: 10px;" 
-                     placeholder="Exemplo (Assembly):add $t1, $t2, $t3 // sub $t0, $t1, $t4 //Exemplo: (Binário): 00000001001010110100100000100000 //10001110101000000000000000000100"></textarea>
-                     <button type="submit" class="bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Próximo</button>
-                 </form>
-             </section>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador MIPS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #FFEBEF; }
+        .container { max-width: 900px; margin: auto; }
+        .box { background-color: #B0D9F5; border-radius: 8px; padding: 16px; }
+        #title-mips:hover::after {
+            content: "Microprocessor without Interlocked Pipeline Stages";
+            position: absolute;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+    </style>
+</head>
+<body class="text-gray-900">
 
-             <!-- Parte da execução, para a pessoa selecionar se prefere que seja automático ou passo a passo-->
-             <section class="bg-white rounded-lg shadow p-4">
-                 <h2 class="text-xl font-bold mb-2">Execução</h2>
-                 <div class="space-y-4">
-                 <div>
-                 <label for="execution-mode" class="block font-medium">Modo de Execução</label>
-                 <select id="execution-mode" class="mt-2 p-2 w-full border rounded">
-                     <option value="step-by-step">Passo a Passo</option>
-                     <option value="automatic">Automático</option>
-                 </select>
-                 </div>
-                 <button id="start-execution" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Iniciar Execução</button>
-                 </div>
-             </section>
+    <header class="bg-pink-500 text-white text-center py-4">
+        <h1 class="text-3xl font-bold">Simulador <span id="title-mips">MIPS</span></h1>
+        <p class="text-sm">Projeto de Arquitetura e Organização de Computadores</p>
+    </header>
 
-             <!-- Nessa parte teoricamente era pro código interligar ao python e ele sairia da escolha da pessoa, ou passo a passo ou automático a resposta -->
-             <section class="bg-white rounded-lg shadow p-4">
-                 <h2 class="text-xl font-bold mb-2">Saída</h2>
-                 <div id="output" class="h-64 overflow-y-auto bg-gray-200 p-2 rounded">
-                 <!-- Parte do código em python que entraria aqui -->
-                 </div>
-             </section>
-             </div>
+    <div class="container py-8 px-4">
 
-             <!-- Etapa para registrar a seleção -->
-             <section class="mt-4 bg-white rounded-lg shadow p-4">
-                 <h2 class="text-xl font-bold mb-2">Registradores</h2>
-                 <div id="registers" class="grid grid-cols-4 gap-4">
-                 <!-- Parte do código em python que entraria aqui -->
-                 </div>
-             </section>
-         </main>
+        <div class="grid grid-cols-3 gap-4">
+            <div class="box">
+                <h2 class="text-lg font-semibold mb-2">Insira o programa (Assembly):</h2>
+                <textarea id="codeInput" class="w-full h-40 p-2 border rounded-md" placeholder="Exemplo: add $t1, $t2, $t3"></textarea>
+            </div>
 
-         <!-- Footer -->
-         <footer class="bg-gray-800 text-white text-center py-4 mt-4">
-             <p> by Gabrielle Kyoko e Vitor Viana <br> 2025 - Simulador MIPS </p>
-         </footer>
+            <div class="box flex flex-col items-center">
+                <h2 class="text-lg font-semibold mb-2">Execução</h2>
+                <label class="text-sm mb-2">Modo de Execução</label>
+                <select id="executionMode" class="border rounded-md px-2 py-1 w-full mb-4">
+                    <option value="">Selecione...</option>
+                    <option value="automatico">Automático</option>
+                    <option value="manual">Passo a passo</option>
+                </select>
+                <button id="executeButton" class="bg-pink-500 text-white px-4 py-2 rounded-md">Executar</button>
+            </div>
 
-         <script>
-              // Example of interactivity (To be connected with Flask or another backend)
-              document.getElementById('upload-form').addEventListener('submit', (e) => {
-               e.preventDefault();
-              alert('Arquivo carregado com sucesso!');
-              // Backend integration via fetch or XMLHttpRequest can go here
-             });
+            <div class="box">
+                <h2 class="text-lg font-semibold mb-2">Saída</h2>
+                <pre id="outputArea" class="bg-gray-100 p-4 rounded-lg text-gray-700 h-40 overflow-auto">Aguardando execução...</pre>
+            </div>
+        </div>
 
-             document.getElementById('start-execution').addEventListener('click', () => {
-             const mode = document.getElementById('execution-mode').value;
-             alert(`Executando em modo: ${mode}`);
-             // Start execution logic (backend connection)
-             });
-         </script>
-     </body>
+        <!-- Registradores -->
+        <div class="box mt-6">
+            <h2 class="text-lg font-semibold mb-2">Registradores</h2>
+            <pre id="registerOutput" class="bg-gray-100 p-4 rounded-lg text-gray-700 overflow-auto h-40">Nenhum dado disponível</pre>
+        </div>
+
+        <!-- Instrução atual e código binário -->
+        <div class="box mt-6">
+            <h2 class="text-lg font-semibold mb-2">Instrução e Código Binário</h2>
+            <div id="instructionOutput" class="bg-gray-100 p-4 rounded-lg text-gray-700 overflow-auto h-20">Nenhuma instrução executada</div>
+            <div id="binaryCodeOutput" class="bg-gray-100 p-4 rounded-lg text-gray-700 overflow-auto h-20">Nenhum código binário gerado</div>
+        </div>
+
+    </div>
+
+    <footer class="bg-gray-900 text-white text-center py-3 mt-6">
+        <p>by Gabrielle Kyoko e Vitor Viana</p>
+        <p>2025 - Apucarana</p>
+    </footer>
+
+    <script>
+        document.getElementById('executeButton').addEventListener('click', async () => {
+            const code = document.getElementById('codeInput').value.trim();
+            const mode = document.getElementById('executionMode').value;
+            const outputArea = document.getElementById('outputArea');
+            const registerOutput = document.getElementById('registerOutput');
+            const instructionOutput = document.getElementById('instructionOutput');
+            const binaryCodeOutput = document.getElementById('binaryCodeOutput');
+
+            if (!mode) {
+                outputArea.textContent = 'Por favor, selecione um modo de execução.';
+                return;
+            }
+
+            if (!code) {
+                outputArea.textContent = 'Por favor, insira algum código.';
+                return;
+            }
+
+            outputArea.textContent = 'Executando...';
+
+            try {
+                const response = await fetch('http://localhost:8000/execute', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, mode })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    let output = '';
+
+                    // Exibindo os registradores
+                    for (let register in result.registers) {
+                        output += `${register}: ${result.registers[register]}\n`;
+                    }
+
+                    registerOutput.textContent = output;
+                    instructionOutput.textContent = `Instrução: ${result.instruction}`;
+                    binaryCodeOutput.textContent = `Código Binário: ${result.binary_code}`;
+                    outputArea.textContent = 'Execução concluída!';
+                } else {
+                    outputArea.textContent = 'Erro ao processar o código.';
+                }
+            } catch (error) {
+                outputArea.textContent = 'Erro ao conectar ao servidor.';
+            }
+        });
+    </script>
+
+</body>
 </html>
