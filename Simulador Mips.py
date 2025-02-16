@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, filedialog
+from tkinter import ttk,messagebox, filedialog
 import sys
 
 # Definindo a classe Registradores
@@ -20,21 +20,20 @@ class Registradores:
 # Definindo a classe Memoria
 class Memoria:
     def __init__(self):
-        self.memoria = {}  # Armazena o conteúdo da memória
+        self.memoria = {}  
         self.endereco_atual = 0x1000  # Endereço inicial para armazenar strings e inteiros
 
     def store(self, endereco, valor, tipo="inteiro"):
         if tipo == "inteiro":
-            self.memoria[endereco] = valor  # Armazenar inteiro
+            self.memoria[endereco] = valor  
         elif tipo == "string":
-            # Armazenar string como bytes (caracteres codificados)
             for i, char in enumerate(valor):
                 self.memoria[endereco + i] = ord(char)
             self.memoria[endereco + len(valor)] = 0  # Byte nulo no final da string
 
     def load(self, endereco, tipo="inteiro"):
         if tipo == "inteiro":
-            return self.memoria.get(endereco, 0)  # Retorna o valor inteiro
+            return self.memoria.get(endereco, 0)
         elif tipo == "string":
             string = ""
             while (char := self.memoria.get(endereco, 0)) != 0:  # Até o byte nulo
@@ -43,7 +42,6 @@ class Memoria:
             return string
 
     def get_endereco(self, nome_string):
-        # Verifica se a string já está armazenada na memória
         if nome_string in self.memoria:
             return self.memoria[nome_string]['endereco']
         
@@ -51,10 +49,8 @@ class Memoria:
         endereco_string = self.endereco_atual
         self.memoria[nome_string] = {'endereco': endereco_string, 'string': nome_string}
         
-        # Armazena os caracteres da string na memória
         self.store(endereco_string, nome_string, tipo="string")
 
-        # Atualiza o próximo endereço disponível para a próxima string
         self.endereco_atual += len(nome_string) + 1
         
         return endereco_string
@@ -71,7 +67,7 @@ class MIPSSimulator:
         self.registradores = {f"${nome}": Registradores(f"${nome}") for nome in registrador_nomes}
         self.registradores["$zero"].set_value(0)
         self.memoria = Memoria()
-        # Removido: self.pc = 0  (não usaremos um contador de programa)
+        self.pc = 0
         self.instrucoes = []
         self.tabela_simbolos = {}
         self.memoria_virtual = 0x10010000
@@ -178,6 +174,8 @@ class MIPSSimulator:
         instrucao = instrucao.strip()
         if not instrucao or instrucao.startswith("#"):
             return
+        
+        self.pc += 1
 
         parts = instrucao.split()
         opcode = parts[0].upper()
@@ -235,7 +233,7 @@ class MIPSSimulator:
             if tipo_impressao.upper() == "INTEIRO":
                 reg = parts[2].strip(',')
                 valor = self.registradores[reg].valor
-                print(valor)
+                print(valor)  # <- Aqui está o problema
             elif tipo_impressao.upper() == "STRING":
                 endereco_str = parts[2].strip(',')
                 if endereco_str in self.tabela_simbolos:
@@ -270,8 +268,7 @@ class MIPSSimulator:
                     print("Execução interrompida pelo usuário.")
                     break
 
-
-
+# Classe para redirecionar saída do console
 class ConsoleRedirect:
     def __init__(self, widget):
         self.widget = widget
@@ -286,7 +283,7 @@ class ConsoleRedirect:
     def flush(self):
         pass
 
-# Interface gráfica
+#Interface Gráfica
 class InterfaceGrafica:
     def __init__(self, root):
         self.root = root
@@ -296,45 +293,67 @@ class InterfaceGrafica:
         self.create_widgets()
 
     def create_widgets(self):
-        self.text_area = tk.Text(self.root, height=10, width=50)
+        # Definindo as cores
+        cor_fundo = "#FFEBEF"
+        cor_header = "#ff5c8a"
+        cor_botao = "#FF5C8A"
+        cor_texto = "#B0D9F5"
+        
+        # Header
+        header = tk.Frame(self.root, bg=cor_header, pady=10)
+        header.pack(fill="x")
+        tk.Label(header, text="Simulador MIPS", font=("Arial", 18, "bold"), fg="white", bg=cor_header).pack()
+        tk.Label(header, text="Projeto de Arquitetura e Organização de Computadores", font=("Arial", 10), fg="white", bg=cor_header).pack()
+
+        # Layout Principal
+        main_frame = tk.Frame(self.root, bg=cor_fundo)
+        main_frame.pack(pady=10, padx=10, fill="both", expand=True)
+
+        # Área de código
+        code_frame = tk.Frame(main_frame, bg=cor_texto, padx=10, pady=10)
+        code_frame.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        tk.Label(code_frame, text="Insira o programa (Assembly):", font=("Arial", 12, "bold"), bg=cor_texto).pack()
+        self.text_area = tk.Text(code_frame, height=10, width=50, wrap="word", font=("Courier", 10))
         self.text_area.pack()
 
-        self.load_button = tk.Button(self.root, text="Carregar Programa", command=self.carregar_arquivo)
-        self.load_button.pack()
+        # Opções de execução
+        exec_frame = tk.Frame(main_frame, bg=cor_texto, padx=10, pady=10)
+        exec_frame.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
+        tk.Label(exec_frame, text="Modo de Execução", font=("Arial", 12, "bold"), bg=cor_texto).pack()
 
-        self.run_button = tk.Button(self.root, text="Run", command=self.run_program)
-        self.run_button.pack()
+        self.run_button = tk.Button(exec_frame, text="Automático", command=self.run_program, bg=cor_botao, fg="white")
+        self.run_button.pack(pady=5)
 
         # Botão para execução passo a passo
-        self.step_button = tk.Button(self.root, text="Próximo Passo", command=self.executar_proximo_passo)
-        self.step_button.pack()
+        self.step_button = tk.Button(exec_frame, text="Próximo Passo", command=self.executar_proximo_passo, bg=cor_botao, fg="white")
+        self.step_button.pack(pady=5)
 
-        # Label para exibir o passo atual de forma intuitiva
-        self.step_info = tk.Label(self.root, text="Nenhum passo executado", fg="blue")
-        self.step_info.pack()
+        self.reset_button = tk.Button(exec_frame, text="Reset", command=self.reset, bg=cor_botao, fg="white")
+        self.reset_button.pack(pady=5)
 
-        self.registradores_painel = tk.Label(self.root, text="Registradores:")
-        self.registradores_painel.pack()
+        # Botao carregar Arquivo
+        self.step_button = tk.Button(exec_frame, text="Carregar Arquivo", command=self.carregar_arquivo, bg=cor_botao, fg="white")
+        self.step_button.pack(pady=5)
 
-        self.registradores_saida = tk.Text(self.root, height=10, width=50, state="disabled")
-        self.registradores_saida.pack()
+        # Saída e resultados
+        output_frame = tk.Frame(main_frame, bg=cor_texto, padx=10, pady=10)
+        output_frame.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
-        self.memoria_label = tk.Label(self.root, text="Memória:")
-        self.memoria_label.pack()
-
-        self.memoria_output = tk.Text(self.root, height=10, width=50, state="disabled")
-        self.memoria_output.pack()
-
-        self.console_label = tk.Label(self.root, text="Console:")
-        self.console_label.pack()
-
-        self.console_output = tk.Text(self.root, height=10, width=50, state="disabled", bg="black", fg="green")
+        tk.Label(output_frame, text="Saída", font=("Arial", 12, "bold"), bg=cor_texto).pack()
+        self.console_output = tk.Text(output_frame, height=8, width=80, state="disabled", bg="black", fg="green")
         self.console_output.pack()
 
-        sys.stdout = ConsoleRedirect(self.console_output)
+        # Área de registradores
+        reg_mem_frame = tk.Frame(main_frame, bg=cor_texto, padx=10, pady=10)
+        reg_mem_frame.grid(row=2, column=0, columnspan=2, padx=5, pady=5, sticky="nsew")
 
-        self.reset_button = tk.Button(self.root, text="Reset", command=self.reset)
-        self.reset_button.pack()
+        tk.Label(reg_mem_frame, text="Registradores (em binário)", font=("Arial", 12, "bold"), bg=cor_texto).pack()
+        self.registradores_saida = tk.Text(reg_mem_frame, height=6, width=80, state="disabled")
+        self.registradores_saida.pack()
+
+        tk.Label(reg_mem_frame, text="Memória", font=("Arial", 12, "bold"), bg=cor_texto).pack()
+        self.memoria_output = tk.Text(reg_mem_frame, height=6, width=80, state="disabled")
+        self.memoria_output.pack()
 
     def carregar_arquivo(self):
         rota_arquivo = filedialog.askopenfilename(filetypes=[("All Files", "*.*")])
@@ -352,7 +371,7 @@ class InterfaceGrafica:
         self.registradores_saida.delete(1.0, tk.END)
         self.memoria_output.delete(1.0, tk.END)
 
-        regs = "\n".join([f"{nome}: {reg.valor}" for nome, reg in self.simulador.registradores.items()])
+        regs = "\n".join([f"{nome}: {format(reg.valor, '032b')}" for nome, reg in self.simulador.registradores.items()])
         self.registradores_saida.insert(tk.END, regs)
 
         memoria_str = ""
@@ -385,7 +404,9 @@ class InterfaceGrafica:
         self.simulador.run()
         self.update_saida()
         self.passo_atual = 0  # Reinicia o passo a passo
-        self.step_info.config(text="Programa executado completamente.")
+        self.console_output.config(state="normal")
+        self.console_output.insert(tk.END, "Programa executado completamente.\n")
+        self.console_output.config(state="disabled")
 
     def executar_proximo_passo(self):
         # Se o programa ainda não foi carregado, carrega-o
@@ -396,14 +417,18 @@ class InterfaceGrafica:
         # Verifica se ainda há instruções a executar
         if self.passo_atual < len(self.simulador.instrucoes):
             instrucao = self.simulador.instrucoes[self.passo_atual]
-            # Atualiza o label informando qual o passo atual e a instrução executada
-            self.step_info.config(text=f"Passo {self.passo_atual + 1}: {instrucao}")
+            # Atualiza a saída com o passo atual e a instrução executada
+            self.console_output.config(state="normal")
+            self.console_output.insert(tk.END, f"Passo {self.passo_atual + 1}: {instrucao}\n")
             self.simulador.executar_instrucoes(instrucao)
             self.update_saida()
             self.passo_atual += 1
+            self.console_output.config(state="disabled")
         else:
             messagebox.showinfo("Fim", "Não há mais instruções para executar.")
-            self.step_info.config(text="Fim do programa.")
+            self.console_output.config(state="normal")
+            self.console_output.insert(tk.END, "Fim do programa.\n")
+            self.console_output.config(state="disabled")
 
     def reset(self):
         self.simulador = MIPSSimulator()
@@ -412,9 +437,11 @@ class InterfaceGrafica:
         self.console_output.delete(1.0, tk.END)
         self.console_output.config(state="disabled")
         self.passo_atual = 0
-        self.step_info.config(text="Nenhum passo executado")
 
 root = tk.Tk()
 root.title("Simulador MIPS")
 interface = InterfaceGrafica(root)
+
+sys.stdout = ConsoleRedirect(interface.console_output)
+
 root.mainloop()
